@@ -6,27 +6,24 @@ FROM dockerfile/nodejs
 
 MAINTAINER Daniel Sont "dan.sont@gmail.com"
  
-EXPOSE 8080
-
 # create node user
+
+
 RUN useradd -ms /bin/bash node
+RUN mkdir /home/node/app && chown -R node:node /home/node
 
-ADD app /home/node/app
-
-RUN chown -R node:node /home/node
+VOLUME /home/node/app
 
 USER node
 ENV HOME /home/node
-
-RUN mkdir ~/.npm-packages && \
-	npm config set prefix ~/.npm-packages
-
+RUN mkdir ~/.npm-packages && npm config set prefix ~/.npm-packages
 ENV NPM_PACKAGES ~/.npm-packages
 ENV NODE_PATH $NPM_PACKAGES/lib/node_modules:$NODE_PATH
 ENV PATH $NPM_PACKAGES/bin:$PATH
-
 ENV MANPATH $NPM_PACKAGES/share/man:$MANPATH
 
 
 WORKDIR /home/node/app
 CMD /bin/bash -c node\ index.js
+
+EXPOSE 8080

@@ -1,0 +1,16 @@
+[Unit]
+Description=nginx
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker kill nginx 
+ExecStartPre=-/usr/bin/docker rm nginx
+ExecStart=/usr/bin/docker run -p 80:80 \
+	-v /nginx/www:/var/www \
+	-v /nginx/log:/var/log/nginx \
+	--link mm-dev:hub-1 \
+	--name=nginx \
+	mm-nginx
+ExecStop=/usr/bin/docker stop nginx
