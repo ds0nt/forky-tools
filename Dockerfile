@@ -11,6 +11,8 @@ EXPOSE 8080
 # create node user
 RUN useradd -ms /bin/bash node
 
+ADD app /home/node/app
+
 RUN chown -R node:node /home/node
 
 USER node
@@ -25,7 +27,6 @@ ENV PATH $NPM_PACKAGES/bin:$PATH
 
 ENV MANPATH $NPM_PACKAGES/share/man:$MANPATH
 
-ADD app /home/node/app
 
 WORKDIR /home/node/app
 CMD /bin/bash -c node\ index.js

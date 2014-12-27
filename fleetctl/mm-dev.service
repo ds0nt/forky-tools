@@ -1,0 +1,19 @@
+[Unit]
+Description=MetaMind
+After=docker.service
+
+[Service]
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker kill mm-dev
+ExecStartPre=-/usr/bin/docker rm mm-dev
+ExecStart=/usr/bin/docker run -t \
+	--env-file=/home/core/share/mmscripts/dev.env \
+	-p 80:3000 \
+	--link mongodb:mongodb \
+	--link rethinkdb:rethinkdb \
+	--name=mm-dev \
+	mm
+ExecStop=/usr/bin/docker stop mm-dev
+
+[Install]
+WantedBy=multi-user.target
