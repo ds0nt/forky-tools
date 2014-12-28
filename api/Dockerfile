@@ -6,24 +6,11 @@ FROM dockerfile/nodejs
 
 MAINTAINER Daniel Sont "dan.sont@gmail.com"
  
-# create node user
 
+RUN git clone https://github.com/21cdawn/metamind-server /app
+RUN cd /app && npm install
 
-RUN useradd -ms /bin/bash node
-RUN mkdir /home/node/app && chown -R node:node /home/node
-
-VOLUME /home/node/app
-
-USER node
-ENV HOME /home/node
-RUN mkdir ~/.npm-packages && npm config set prefix ~/.npm-packages
-ENV NPM_PACKAGES ~/.npm-packages
-ENV NODE_PATH $NPM_PACKAGES/lib/node_modules:$NODE_PATH
-ENV PATH $NPM_PACKAGES/bin:$PATH
-ENV MANPATH $NPM_PACKAGES/share/man:$MANPATH
-
-
-WORKDIR /home/node/app
+WORKDIR /app
 CMD /bin/bash -c node\ index.js
 
 EXPOSE 8080
