@@ -1,0 +1,17 @@
+[Unit]
+Description=MetaMind Web Develepment Instance
+After=docker.service
+
+[Service]
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker kill mm-web
+ExecStartPre=-/usr/bin/docker rm mm-web
+ExecStart=/usr/bin/docker run -t \
+	--env-file=/mm-web/mm-web.env \
+	-v /mm-web/web:/mm-web \
+	--name=mm-web \
+	mm-web
+ExecStop=-/usr/bin/docker stop mm-web
+
+[Install]
+WantedBy=multi-user.target

@@ -1,38 +1,85 @@
 #!/bin/bash
 
-_sym=/nginx
-_service=nginx.service
+_global_sym=/nginx
+_local_sym=www
 
-[[ "$(hostname)" == "tier-01" ]] && ./build && _service=nginx-tier-01.service
+_service=nginx-$(hostname).service 
+_d_image=nginx
+
+graceful_exit () {
+	echo $@
+	exit 1
+}
+
+check_service () {
+	if [[ ! -f $_service ]]; then
+		echo "missing file: $_service"
+		graceful_exit "make a service file for this instance"
+	fi
+}
+
+check_app () {
+	if [[ ! -d $_local_sym ]]; then
+		echo "missing symlink: ./$_local_sym -> /path/to/metamind/$_local_sym"
+		graceful_exit "make sure to run $0 setup"
+	fi
+}
 
 # commands
-if [[ "$1" == "logs" ]]; then	
+logs () {
 	sudo journalctl -f -n 35 -u $_service
-	exit 0;
-fi;
+}
 
-_off=false
-_on=false
+off () {
+	sudo systemctl stop $_service || graceful_exit "failed to stop $_service";
+	sudo systemctl disable $_service || graceful_exit "failed to disable $_service";
+}
 
-[[ "$1" == "off" ]] && _on=false && _off=true
-[[ "$1" == "on" ]] && _on=true && _off=false
-[[ "$1" == "reload" ]] && _on=true && _off=true
+on () {
+	sudo systemctl daemon-reload || graceful_exit "systemctl daemon-reload exited with error code $?"
+	sudo systemctl enable $(pwd)/$_service || graceful_exit "systemctl enable $(pwd)/$service exited with error code $?"
+	sudo systemctl start $_service || graceful_exit "sudo systemctl start $_service exited with error code $?"
+}
 
-if $_off; then
-	sudo systemctl stop $_service || exit 1;
-	sudo systemctl disable $_service || exit 1;
-fi;
+create_local_sym () {
+	ln -s $1 $_local_sym || graceful_exit "Failed to create symlink from $_local_sym to $1"
+}
 
-if $_on; then
-	
+create_global_sym () {
 	# Symlink Directory
-	if [[ ! -d $_sym ]]; then
+	if [[ ! -d $_global_sym ]]; then
 		echo "Creating Symlink"
-		sudo ln -sv $(pwd) $_sym
+		sudo ln -sv $(pwd) $_global_sym || graceful_exit "Failed to create symlink from $_global_sym to $(pwd)"
 	fi
+}
 
-	sudo systemctl daemon-reload;
-	sudo systemctl enable $(pwd)/$_service || exit 1;
-	sudo systemctl start $_service || exit 1;
-	echo "Run $0 logs to see logs"
-fi
+build () {
+	docker build --tag="$_d_image" ./
+}
+
+usage () {
+	echo -e "\n  Usage $0 COMMAND [options]" \
+		"\n" \
+		"\n\t setup <path>   create required symlink to web assets" \
+		"\n\t build          build docker image with tag $_d_image" \
+		"\n\t logs           show logs for $_service" \
+		"\n" \
+		"\n\t Service Commands:" \
+		"\n\t   on      enable and start $_service" \
+		"\n\t   off     stop and disable $_service" \
+		"\n\t   reload  stop, disable, daemon-reload, enable, and start $_service"
+}
+
+[[ -z $1 ]] && usage && exit 1
+
+[[ "$1" == "setup" ]] && create_local_sym $2 && exit 0
+[[ "$1" == "build" ]] && build && exit 0
+
+check_app
+check_service
+create_global_sym
+
+[[ "$1" == "off" ]] && off && exit 0
+[[ "$1" == "on" ]] && on && exit 0
+[[ "$1" == "reload" ]] && off && on && exit 0
+[[ "$1" == "logs" ]] && logs && exit 0

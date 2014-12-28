@@ -1,16 +1,17 @@
 [Unit]
-Description=MetaMind
+Description=MetaMind Server
 After=docker.service
 
 [Service]
 TimeoutStartSec=0
 ExecStartPre=-/usr/bin/docker kill mm-prod
 ExecStartPre=-/usr/bin/docker rm mm-prod
-ExecStart=/usr/bin/docker run -t --env-file=/mm/mm.env \
-	-p 8080:8080 \
+ExecStart=/usr/bin/docker run -t \
+	--env-file=/mm/mm.env \
+	-v /mm/app:/home/node/app \
 	--name=mm-prod \
 	mm
-ExecStop=/usr/bin/docker stop mm-prod
+ExecStop=-/usr/bin/docker stop mm-prod
 
 [Install]
 WantedBy=multi-user.target

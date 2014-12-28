@@ -1,7 +1,8 @@
 #!/bin/bash
 
-_sym=/mm
-_service=mm-$(hostname).service 
+_sym=/mm-web
+_service=mm-web.service 
+_d_image=mm-web
 
 graceful_exit () {
 	echo $@
@@ -16,9 +17,9 @@ check_service () {
 }
 
 check_app () {
-	if [[ ! -d app ]]; then
-		echo "missing symlink: ./app -> /path/to/metamind/server"
-		graceful_exit "fix with $0 app /path/to/metamind/server"
+	if [[ ! -d web ]]; then
+		echo "missing symlink: ./web -> /path/to/metamind/web"
+		graceful_exit "make sure to run $0 setup"
 	fi
 }
 
@@ -38,8 +39,8 @@ on () {
 	sudo systemctl start $_service || graceful_exit "sudo systemctl start $_service exited with error code $?"
 }
 
-app_sym () {
-	ln -s $1 app || graceful_exit "Failed to create symlink from app to $1"
+web_sym () {
+	ln -s $1 web || graceful_exit "Failed to create symlink from web to $1"
 }
 
 global_sym () {
@@ -50,19 +51,27 @@ global_sym () {
 	fi
 }
 
+build () {
+	docker build --tag="$_d_image" ./
+}
+
 usage () {
 	echo -e "\n  Usage $0 COMMAND [options]" \
-		"\n\n\t setup <path>    create required symlink to nodejs code" \
-		"\n\n\t Commands:" \
+		"\n" \
+		"\n\t setup <path>   create required symlink to web code" \
+		"\n\t build          build docker image with tag $_d_image" \
+		"\n\t logs           show logs for $_service" \
+		"\n" \
+		"\n\t Service Commands:" \
 		"\n\t   on      enable and start $_service" \
 		"\n\t   off     stop and disable $_service" \
-		"\n\t   reload  stop, disable, daemon-reload, enable, and start $_service" \
-		"\n\t   logs    show logs for $_service"
+		"\n\t   reload  stop, disable, daemon-reload, enable, and start $_service"
 }
 
 [[ -z $1 ]] && usage && exit 1
 
-[[ "$1" == "setup" ]] && app_sym $2 && exit 0
+[[ "$1" == "setup" ]] && web_sym $2 && exit 0
+[[ "$1" == "build" ]] && build && exit 0
 
 check_app
 check_service

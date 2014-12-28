@@ -10,6 +10,7 @@ ExecStartPre=-/usr/bin/docker rm nginx
 ExecStart=/usr/bin/docker run -p 80:80 \
 	-v /nginx/www:/var/www \
 	-v /nginx/log:/var/log/nginx \
+	-v /nginx/nginx.conf:/etc/nginx/nginx.conf \
 	--link mm-dev:hub-1 \
 	--name=nginx \
 	mm-nginx
