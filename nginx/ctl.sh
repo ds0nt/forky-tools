@@ -1,26 +1,31 @@
 #!/bin/bash
 
-_global_sym=/nginx
-_local_sym=www
+source ../config.sh
 
 _service=nginx-$(hostname).service 
-_d_image=nginx
+_image=nginx
 
 graceful_exit () {
 	echo $@
 	exit 1
 }
 
-check_service () {
-	if [[ ! -f $_service ]]; then
-		echo "missing file: $_service"
-		graceful_exit "make a service file for this instance"
-	fi
-}
+# Symlink Directory
+sym='/nginx'
+if ! [ -d "$sym" ]; then
+	echo "Creating Symlink"
+	sudo ln -sv $(pwd) $sym || graceful_exit "Failed to create symlink from $sym to $(pwd)"
+fi
+
+if [[ ! -f $_service ]]; then
+	echo "missing file: $_service"
+	graceful_exit "make a service file for this instance"
+fi
+
 
 check_app () {
-	if [[ ! -d $_local_sym ]]; then
-		echo "missing symlink: ./$_local_sym -> /path/to/metamind/$_local_sym"
+	if [[ ! -d www ]]; then
+		echo "missing symlink: ./www -> /path/to/metamind/www"
 		graceful_exit "make sure to run $0 setup"
 	fi
 }
@@ -41,27 +46,25 @@ on () {
 	sudo systemctl start $_service || graceful_exit "sudo systemctl start $_service exited with error code $?"
 }
 
-create_local_sym () {
-	ln -s $1 $_local_sym || graceful_exit "Failed to create symlink from $_local_sym to $1"
-}
-
-create_global_sym () {
-	# Symlink Directory
-	if [[ ! -d $_global_sym ]]; then
-		echo "Creating Symlink"
-		sudo ln -sv $(pwd) $_global_sym || graceful_exit "Failed to create symlink from $_global_sym to $(pwd)"
-	fi
-}
 
 build () {
-	docker build --tag="$_d_image" ./
+	docker build --tag="$_image" ./
+}
+
+set_env () {
+	rm www
+	if [[ "$1" == "release" ]]; then
+		ln -sv $WEB_RELEASE www
+	else
+		ln -sv $WEB_DEV www		
+	fi
 }
 
 usage () {
 	echo -e "\n  Usage $0 COMMAND [options]" \
 		"\n" \
-		"\n\t setup <path>   create required symlink to web assets" \
-		"\n\t build          build docker image with tag $_d_image" \
+		"\n\t set-env        serve release or dev bundle" \
+		"\n\t build          build docker image with tag $_image" \
 		"\n\t logs           show logs for $_service" \
 		"\n" \
 		"\n\t Service Commands:" \
@@ -72,14 +75,12 @@ usage () {
 
 [[ -z $1 ]] && usage && exit 1
 
-[[ "$1" == "setup" ]] && create_local_sym $2 && exit 0
+[[ "$1" == "set-env" ]] && set_env $2 && exit 0
 [[ "$1" == "build" ]] && build && exit 0
+[[ "$1" == "off" ]] && off && exit 0
+[[ "$1" == "logs" ]] && logs && exit 0
 
 check_app
-check_service
-create_global_sym
 
-[[ "$1" == "off" ]] && off && exit 0
 [[ "$1" == "on" ]] && on && exit 0
 [[ "$1" == "reload" ]] && off && on && exit 0
-[[ "$1" == "logs" ]] && logs && exit 0

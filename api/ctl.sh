@@ -1,7 +1,7 @@
 #!/bin/bash
 
 _sym=/mm
-_service=mm-$(hostname).service 
+_service=mm-$(hostname -s).service 
 
 graceful_exit () {
 	echo $@
