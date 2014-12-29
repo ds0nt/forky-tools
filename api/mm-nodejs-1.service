@@ -7,8 +7,7 @@ TimeoutStartSec=0
 ExecStartPre=-/usr/bin/docker kill mm-prod
 ExecStartPre=-/usr/bin/docker rm mm-prod
 ExecStart=/usr/bin/docker run -t \
-	--env-file=/mm/mm.env \
-	-v /mm/app:/home/node/app \
+	--env-file=/mm/mm-nodejs-1.env \
 	--name=mm-prod \
 	mm
 ExecStop=-/usr/bin/docker stop mm-prod
