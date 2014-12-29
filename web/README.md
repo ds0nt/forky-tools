@@ -1,6 +1,6 @@
 # Web Bundle Builder
 
-The code here turns the front-end source code into a website. allows you to build and watch the web bundle.
+Build tools for metamind front-end. Manages a utility docker container for consistent and convinient building.
 
 ##Configure
 
@@ -8,12 +8,12 @@ Open ../config.sh. Configure local path to [MetaMind](http://github.com/21cdawn/
 
 ```bash
  # absolute paths
- WEB_SRC=/path/of/21cdawn/metamind
- WEB_DEV=/dev/build/target/path
- WEB_RELEASE=/release/build/target/path
+ WEB_SRC=/path/to/21cdawn/metamind
+ WEB_DEV=/path/to/save/dev-bundle
+ WEB_RELEASE=/path/to/save/release-bundle
 ```
 
-First you need to build the Dockerfile, producing a docker image.
+## Build Utility Docker
 
 ```bash
  $ ./ctl.sh build
@@ -22,8 +22,8 @@ First you need to build the Dockerfile, producing a docker image.
 ## Build
 
 ```bash
- $ ./ctl.sh build-dev
- $ ./ctl.sh build-release
+ $ ./ctl.sh bundle-dev
+ $ ./ctl.sh bundle-release
 ```
 
 ## Build Continuously
