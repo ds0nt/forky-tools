@@ -5,12 +5,19 @@ if [[ "$MM_ENV" == "release" ]]; then
 	release=--release
 fi
 
+if [[ "$MM_WATCH" == "true" ]]; then
+	buildcmd=watch
+else
+	buildcmd=build
+fi
+
 cd /src
 
-npm install || exit $?;
+# npm install || exit $?;
 
-gulp build $release --dest=/tmp/dist --verbose=true || exit $?;
+gulp $buildcmd $release --dest=/tmp/dist --verbose=true || exit $?;
 
+rm -rf /dist/*
 mv /tmp/dist/* /dist
 
 # if [[ -z $tar ]]; then
